@@ -38,7 +38,7 @@ def resume_training(resume_dir):  # TODO
     return result
 
 
-def create_callbacks():
+def create_eval_callbacks():
 
     pass  # TODO
 
@@ -130,7 +130,9 @@ class LYLightningTrainer:
         ) as f:
             f.write(wandb.run.id)
 
-        lr_monitor = LearningRateMonitor(logging_interval="step")
+        callback_list = list()
+        callback_list.append(LearningRateMonitor(logging_interval="step"))
+        callback_list.append(RichProgressBar())
 
         # TODO
         checkpoint_callback1 = ModelCheckpoint(
@@ -150,18 +152,13 @@ class LYLightningTrainer:
             save_last=True,
             save_top_k=1,
         )
-
-        progress_bar = RichProgressBar()
+        callback_list.append(checkpoint_callback1)
+        callback_list.append(checkpoint_callback2)
 
         # Setup Trainer
         trainer = L.Trainer(
             deterministic=self.deterministic,
-            callbacks=[
-                checkpoint_callback1,
-                checkpoint_callback2,
-                lr_monitor,
-                progress_bar,
-            ],
+            callbacks=callback_list,
             profiler="simple",
             logger=wandb_logger,
             precision=self.precision,
