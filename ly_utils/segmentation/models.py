@@ -3,16 +3,15 @@
 # different sources: MONAI, TIMM, etc.
 ##########################################################################################
 
-import segmentation_models_pytorch.Unet as smp_unet
+import torch
+import segmentation_models_pytorch as smp
 
 
 def create_seg_model(model_name, in_channels, out_channels, **kwargs):
 
-    model_class = seg_model_dict[model_name]
-
     model_kwargs = dict()
     if model_name == "SMPUNet":
-        model_class = smp_unet
+        model_class = smp.Unet
         model_kwargs["in_channels"] = in_channels
         model_kwargs["classes"] = out_channels
 
@@ -29,6 +28,6 @@ def create_seg_model(model_name, in_channels, out_channels, **kwargs):
         print("Trying to load pretrained model weights")
         state_dict = torch.load(weight_path)
         model.load_state_dict(state_dict, strict=False)
-        print("Pretrained model weights.")
+        print("Pretrained model weights loaded.")
 
     return model

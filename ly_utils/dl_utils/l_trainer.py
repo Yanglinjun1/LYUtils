@@ -7,11 +7,6 @@ import os
 import datetime
 import wandb
 import lightning as L
-from lightning.pytorch.callbacks import (
-    ModelCheckpoint,
-    LearningRateMonitor,
-    RichProgressBar,
-)
 from lightning.pytorch.strategies.ddp import DDPStrategy
 from lightning.pytorch.loggers import WandbLogger
 from .utils import is_notebook_running
@@ -36,11 +31,6 @@ def resume_training(resume_dir):  # TODO
     result["wandb_id"] = wandb_id
 
     return result
-
-
-def create_eval_callbacks():
-
-    pass  # TODO
 
 
 class LYLightningTrainer:
@@ -112,7 +102,7 @@ class LYLightningTrainer:
 
         self.trainer = self.setup_trainer()
 
-    def setup_trainer(self):
+    def setup_trainer(self, callback_list):
         wandb_logger = WandbLogger(
             save_dir=f"{self.output_directory}",
             name=self.logger_instance,
@@ -129,31 +119,6 @@ class LYLightningTrainer:
             "w",
         ) as f:
             f.write(wandb.run.id)
-
-        callback_list = list()
-        callback_list.append(LearningRateMonitor(logging_interval="step"))
-        callback_list.append(RichProgressBar())
-
-        # TODO
-        checkpoint_callback1 = ModelCheckpoint(
-            dirpath=f"{self.output_directory}/pl/{self.group}/{self.logger_instance}",
-            filename=f"{self.logger_instance}-{{epoch}}-{{step}}-{{val_dsc_mean:0.4F}}",
-            monitor="val_dsc_mean",
-            mode="max",
-            save_last=True,
-            save_top_k=1,
-        )
-
-        checkpoint_callback2 = ModelCheckpoint(
-            dirpath=f"{self.output_directory}/pl/{self.group}/{self.logger_instance}",
-            filename=f"{self.logger_instance}-{{epoch}}-{{step}}-{{val_dsc_augment:0.4F}}-{{val_dsc_mean:0.4F}}",
-            monitor="val_dsc_augment",
-            mode="max",
-            save_last=True,
-            save_top_k=1,
-        )
-        callback_list.append(checkpoint_callback1)
-        callback_list.append(checkpoint_callback2)
 
         # Setup Trainer
         trainer = L.Trainer(
