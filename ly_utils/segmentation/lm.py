@@ -157,14 +157,21 @@ class LYSegModelBase(L.LightningModule):
                 sync_dist=True,
             )
 
-    def process_configurations(self, model_cfg, train_hyp):  # TODO
+    def process_configurations(self, model_cfg, train_hyp):
         # e.g., 0:'background'
         label_index = model_cfg.get("label_index", None)
         if label_index is None:
             raise ValueError("Please specify the label index in the model configuration!")
         out_channels = len(label_index)
 
-        # network
+        # multi_label or multi_class
+        multi_label = model_cfg.get("multi_label", None)
+        if multi_label is None:
+            raise ValueError("Please specify if the seg model is multi-label!")
+        if not multi_label:  # "background" is not initialized in model yaml; hence +1
+            out_channels += 1
+
+        # neural network args
         model_name = model_cfg.get("model_name", "SMPUNet")
         model_args = model_cfg.get("model_args", {})
         model_args["model_name"] = model_name
@@ -172,15 +179,16 @@ class LYSegModelBase(L.LightningModule):
         if model_args.get("out_channels") != out_channels:
             model_args["out_channels"] = out_channels
 
-        # multi_label or multi_class
-        multi_label = model_cfg.get("multi_label", None)
-        if multi_label is None:
-            raise ValueError("Please specify if the seg model is multi-label!")
+        # wandb image visulization; order to overlay labels
+        label_overlay_order = model_cfg.get("label_overlay_order", None)
+        if not label_overlay_order is None:  # "foreground":n -> 1:n for wandb Image
+            label_overlay_order = {
+                label_index[key]: value for key, value in label_overlay_order.items()
+            }
 
-        # wandb image visulization; order to overlay labels TODO
-        label_overlay_order = model_cfg.get(
-            "label_overlay_order", {i: i for i in range(out_channels)}
-        )
+        # when creating wandb Image, need to convert int to str
+        int2str_dict = {value: key for key, value in label_index.items()}
+        int2str_dict[0] = "background"
 
         # loss parameters
         losses = train_hyp.get("losses", [{"name": "DiceFocalLoss", "weight": 1.0}])
@@ -200,6 +208,7 @@ class LYSegModelBase(L.LightningModule):
 
         # assign all as the attributes
         self.label_index = label_index
+        self.in2str_dict = int2str_dict
         self.label_overlay_order = label_overlay_order
         self.out_channels = out_channels
         self.model_args = model_args

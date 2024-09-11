@@ -12,34 +12,65 @@ __all__ = ["load_segmentations", "LoadSegmentationD"]
 
 
 def load_segmentations(
-    path: str, labels: dict, label_order: dict = None
-):  # TODO labels -> label_index
+    path: str,
+    labels: dict,
+    label_order: dict = None,
+    target_shape: tuple = None,
+    pad: bool = True,
+    transpose: bool = True,
+):
     """
-    This function reads a given segmentation file in .seg.nrrd format and return
-    the numpy array of the segmentation data in one of the two formats:
-    1) multi-label: each channel represents one class label; one-hot format
-    2) multi-class: one single channel and class label as different integer values
-    Originally by Kellen Mulford
+    This function reads a given segmentation file in .seg.nrrd format and return the numpy array
+    of the segmentation data in one of the two formats: multi-label (multi-channel, binary value) or multi-class (
+    single-channel, multiple value). The labels argument is needed to specify the channel index at the output array and
+    /or pixel value at the single channel output for each class label. The label_order argument is specified
+    to define the order that labels overwrite each other, and it's only used when creating multi-class segmentation map.
+    The target_shape argument is used to resize the segmentation map to the desired shape. The transpose argument is used
+    to swap the image dimension of the voxel array after loading, which is set to True as the nrrd usually swap the axes.
+
+    Original by Kellen Mulford; modified by Linjun Yang
+
+    Args:
+        path (str): The path to the segmentation data.
+        labels (dict): A dictionary mapping layer names to their corresponding label values.
+        label_order (dict, optional): A dictionary specifying the order of the labels. Defaults to None.
+        target_shape (tuple, optional): The desired shape of the output segmentation. Defaults to None.
+        pad (bool, optional): Whether to pad the output array before resizing. Defaults to True.
+        transpose (bool, optional): Whether to swap the image dimension of the voxel array after loading. Defaults to True to process .seg.nrrd files.
+
+    Returns:
+        np.ndarray: The processed segmentation data of shape (num_channels, height, width) for multi-label or
+        (1, height, width) for multi-class.
+
+    Raises:
+        None
+
     """
 
-    multi_label = False if label_order is None else True
+    # Check if the segmentation is multi-label or multi-class
+    multi_label = True if label_order is None else False
 
     ## Load Data
     segmentation_info = slicerio.read_segmentation(path, skip_voxels=True)
     voxels, _ = nrrd.read(path)
 
-    ## Add channels dim if not present
+    ## Add the first channels dim if not present
     if len(voxels.shape) == 3:
         voxels = np.expand_dims(voxels, axis=0)
+
+    # swap axes if needed; usually needed for .seg.nrrd files
+    if transpose:
+        voxels = np.transpose(voxels, (0, 2, 1, 3))
 
     ## Prep Empty Volume
     x = voxels.shape[1]
     y = voxels.shape[2]
     channels = len(segmentation_info["segments"])
 
-    output = np.zeros((x, y, channels))
+    output = np.zeros((channels, x, y))
 
     ## Loop through layers
+    layer_voxels = np.squeeze(voxels, axis=-1)
     for i, segment in enumerate(segmentation_info["segments"]):
 
         ## Extract Metadata
@@ -48,43 +79,68 @@ def load_segmentations(
         labelValue = segment["labelValue"]
 
         ## Set up new layer based on voxel value from segmentation info
-        layer_voxels = np.moveaxis(voxels, 0, -1)
-        layer_voxels = np.squeeze(layer_voxels, axis=-2)
-        indx = (layer_voxels[..., layer] == labelValue).nonzero()
-        new_layer = np.zeros(layer_voxels[..., layer].shape)
-        new_layer[indx] = labelValue
+        indx = (layer_voxels[layer, ...] == labelValue).nonzero()
+        new_layer = np.zeros((x, y))  # (x, y) is the shape of the layer
+        new_layer[indx] = 1
 
         ## Assign the new layer to the output based on defined channel order
         # label starts with 1 not zero, minus 1 is needed
-        output[
-            ...,
-            labels[str.lower(layer_name) if multi_label else str.lower(layer_name)] - 1,
-        ] = new_layer
+        output[labels[str.lower(layer_name)] - 1, ...] = new_layer
 
-    output = np.where(np.moveaxis(output, -1, 0) > 0.0, 1, 0)
-    if multi_label:  # return for multi-label segmentation model
+    # Resize to target shape
+    if target_shape is not None:
+        if pad:
+            side = max(x, y)
+            padder = mn.transforms.SpatialPad(
+                (side, side), method="symmetric", mode="constant"
+            )
+            output = padder(output)
+        x, y = target_shape  # update the x and y!!!
+        resizer = mn.transforms.Resize(target_shape, mode="nearest")
+        output = resizer(output)
+
+    # return for multi-label segmentation model
+    if multi_label:
         return output
     else:
-        output2 = np.zeros((x, y, 1))
+        output2 = np.zeros((1, x, y))
         label_order_list = sorted(label_order.items(), key=lambda x: x[1])
         for label_name, _ in label_order_list:
-            output2[output[labels[label_name] - 1] == 1, :] = labels[label_name]
+            output2[:, output[labels[label_name] - 1] == 1] = labels[label_name]
 
         return output2
 
 
 class LoadSegmentationD(mn.transforms.Transform):
-    def __init__(self, keys: list[str], labels: dict, labels_order: dict) -> None:
+    def __init__(
+        self,
+        keys: list[str],
+        labels: dict,
+        labels_order: dict,
+        target_shape: tuple = None,
+        transpose: bool = True,
+        pad: bool = True,
+    ) -> None:
         super().__init__()
         self.keys = keys
         self.labels = labels
         self.labels_order = labels_order
+        self.target_shape = target_shape
+        self.transpose = transpose
+        self.pad = pad
 
     def __call__(self, data):
         data_copy = copy.deepcopy(data)
         for key in self.keys:
             if key in data:
-                output = load_segmentations(data[key], self.labels, self.labels_order)
+                output = load_segmentations(
+                    data[key],
+                    self.labels,
+                    self.labels_order,
+                    self.target_shape,
+                    self.transpose,
+                    self.pad,
+                )
                 data_copy[key] = output
 
         return data_copy
