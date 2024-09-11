@@ -28,14 +28,17 @@ The following is a log of the changes made to the repository.
     - create a function called **overlay_labels** to use **label_overlay_order** above to overlay multi-label segmentation map into a single-channel segmentation map for wandb image logging purpose
     - create a unified function called **create_overlay_log** to generate wandb Image for logging for both multi-class and multi-label segmentation models
 - To standardize segmentation DL project, in model configuration yaml file, the following fields should be specified:
-    - **label_index**
+    - label_index
         - **1-index** or starting with 1; it should NOT include background (or 0)
         - It should be **label_name:label_index**, e.g., "foreground":1
         - The label_index value will be the pixel value for multi-class segmentation map; label_value-1 will be the channel index for the multi-label segmentation map
         - **NOTE: you should design this field beforehand, and label_name should match with those in the std_segmentation file used in 3D Slicer segmentation!!**
-    - **label_order**
+    - label_order
         - It should be **label_name:label_order**, e.g., "hand":1 and "ring":2, meaning the "ring" class will be overlaid on the top of "hand" class
-        - It has two usages 1) **LoadSegmentationD** class, and 2) **.segmentation.lm.py**
+        - It has **two usages** 1) LoadSegmentationD class for segmentation, and 2) wandb image creation
+- Added **dl_utils.base_lm** and created **LYLightningModuleBase** for basic lightning module.
+    - Implemented **configure_optimizers** function
+    - Set foward, log_loss, log_metric, and process_configurations with NotImplementedError
 
 ### 08/30/2024
 

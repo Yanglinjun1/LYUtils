@@ -3,17 +3,15 @@
 # testing.
 ##########################################################################################
 
-import torch
 import monai as mn
-import lightning as L
 from .models import create_seg_model
 from .losses import LYSegLosses
 from .metrics import LYSegMetrics
-from ..dl_utils.optimizers import create_optimizer
-from ..dl_utils.lr_schedulers import create_LRScheduler
+from .utils import create_overlay_log
+from ..dl_utils.base_lm import LYLightningModuleBase
 
 
-class LYSegModelBase(L.LightningModule):
+class LYSegModelBase(LYLightningModuleBase):
     def __init__(
         self,
         model_cfg,
@@ -81,7 +79,21 @@ class LYSegModelBase(L.LightningModule):
         # logging: metric
         _ = self.val_metric_func(pred_list, seg)
 
-        # logging: visualization: TODO
+        # logging: visualization first two val images using wandb
+        if batch_idx == 0:
+            img_show = img[:2]
+            seg_show = seg[:2]
+            pred_show = pred_list[:2]
+            wb_image = create_overlay_log(
+                img_show,
+                seg_show,
+                pred_show,
+                self.int2str_dict,
+                self.label_overlay_order,
+                nrow=1,
+                num_image=2,
+            )
+            self.logger.experiment.log({"overlay_segmentation": wb_image})
 
     def on_validation_epoch_end(self):
 
@@ -92,15 +104,6 @@ class LYSegModelBase(L.LightningModule):
 
         # reset the metric
         self.val_metric_func.reset()
-
-    def configure_optimizers(self):
-        optimizer = create_optimizer(self.parameters(), **self.opt_params)
-        scheduler = create_LRScheduler(optimizer, self.lr_scheduler_params)
-
-        if scheduler is not None:
-            return [optimizer], [scheduler]
-        else:
-            return [optimizer]
 
     def log_loss(self, loss_dict, mode="train"):
         for loss_name, loss in loss_dict.items():
@@ -180,11 +183,13 @@ class LYSegModelBase(L.LightningModule):
             model_args["out_channels"] = out_channels
 
         # wandb image visulization; order to overlay labels
-        label_overlay_order = model_cfg.get("label_overlay_order", None)
-        if not label_overlay_order is None:  # "foreground":n -> 1:n for wandb Image
+        if multi_label:  # "foreground":n -> 1:n for wandb Image
+            label_overlay_order = model_cfg.get("label_order", None)
             label_overlay_order = {
                 label_index[key]: value for key, value in label_overlay_order.items()
             }
+        else:
+            label_overlay_order = None
 
         # when creating wandb Image, need to convert int to str
         int2str_dict = {value: key for key, value in label_index.items()}
@@ -208,7 +213,7 @@ class LYSegModelBase(L.LightningModule):
 
         # assign all as the attributes
         self.label_index = label_index
-        self.in2str_dict = int2str_dict
+        self.int2str_dict = int2str_dict
         self.label_overlay_order = label_overlay_order
         self.out_channels = out_channels
         self.model_args = model_args
