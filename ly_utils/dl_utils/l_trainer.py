@@ -102,7 +102,7 @@ class LYLightningTrainer:
 
         self.trainer = self.setup_trainer()
 
-    def setup_trainer(self, callback_list):
+    def setup_trainer(self, callback_list=[]):
         wandb_logger = WandbLogger(
             save_dir=f"{self.output_directory}",
             name=self.logger_instance,

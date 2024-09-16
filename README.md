@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/16/2024
+
+- Implemented **LYDataModuleBase** and subclassed it to creat **LYSegDataModuleBase**
+
 ### 09/11/2024
 
 - Implemented (adapted) the **load_semgentations** function that
