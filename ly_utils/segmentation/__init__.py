@@ -1,4 +1,5 @@
 from .lm import LYSegModelBase
+from .dm import LYSegDataModuleBase
 from .losses import LYSegLosses
 from .metrics import LYSegMetrics
 from .models import create_seg_model
