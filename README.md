@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/17/2024
+
+- Checked and to try **LYLightningTrainer**
+
 ### 09/16/2024
 
 - Implemented **LYDataModuleBase** and subclassed it to creat **LYSegDataModuleBase**

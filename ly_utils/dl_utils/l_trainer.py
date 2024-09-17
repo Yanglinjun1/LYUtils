@@ -41,7 +41,7 @@ class LYLightningTrainer:
         project_name,
         output_directory,
         experiment_name,
-        max_epochs,
+        max_epochs=None,
         logger_instance=None,
         check_val_every_n_epoch=1,
         precision="16-mixed",
@@ -102,7 +102,7 @@ class LYLightningTrainer:
 
         self.trainer = self.setup_trainer()
 
-    def setup_trainer(self, callback_list=[]):
+    def setup_trainer(self, wandb_run_dir=None, callback_list=[]):
         wandb_logger = WandbLogger(
             save_dir=f"{self.output_directory}",
             name=self.logger_instance,
@@ -114,8 +114,10 @@ class LYLightningTrainer:
         )
 
         # Save the wandb run ID
+        if wandb_run_dir is None:
+            wandb_run_dir = f"{self.output_directory}/pl/{self.group}/{self.logger_instance}/wandb_run_id.txt"
         with open(
-            f"{self.output_directory}/pl/{self.group}/{self.logger_instance}/wandb_run_id.txt",
+            wandb_run_dir,
             "w",
         ) as f:
             f.write(wandb.run.id)

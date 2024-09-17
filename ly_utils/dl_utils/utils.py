@@ -7,6 +7,7 @@ import os
 import random
 import torch
 import monai as mn
+import lightning as L
 
 
 def is_notebook_running():
@@ -28,7 +29,7 @@ def is_notebook_running():
         return False  # Probably standard Python interpreter
 
 
-def make_determinate(random_seed):
+def make_determinate(random_seed: int):
     """Use a random_seed to enable deterministic programming for Pytorch, Moani,
       and Numpy and.
 
@@ -43,3 +44,4 @@ def make_determinate(random_seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     mn.utils.misc.set_determinism(seed=random_seed)
+    L.seed_everything(random_seed, workers=True)
