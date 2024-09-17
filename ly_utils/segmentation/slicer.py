@@ -85,7 +85,7 @@ def load_segmentations(
 
         ## Assign the new layer to the output based on defined channel order
         # label starts with 1 not zero, minus 1 is needed
-        output[labels[str.lower(layer_name)] - 1, ...] = new_layer
+        output[labels[layer_name] - 1, ...] = new_layer
 
     # Resize to target shape
     if target_shape is not None:
