@@ -13,7 +13,7 @@ class LYSegMetrics:
     def __init__(
         self,
         metrics: list = ["dice", "hausdorff"],
-        label_index: dict = {0: "background", 1: "foreground"},
+        label_index: dict = {"foreground":1},
         multi_label: bool = False,
     ):
 
@@ -52,9 +52,9 @@ class LYSegMetrics:
 
             # for each label
             result_tensor = metric_obj.aggregate()
-            for ind, label in self.label_index.items():
-                if ind == 0 and not self.multi_label:  # skip background for multi_class
-                    continue
+            for label, ind in self.label_index.items():
+                if self.multi_label:  # if multi_label, start from 1-1=0; else (multi-class) start with 1
+                    ind -= 1
                 result[label] = result_tensor[ind].item()
 
             # mean metric across labels
