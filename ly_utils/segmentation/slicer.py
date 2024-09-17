@@ -116,7 +116,7 @@ class LoadSegmentationD(mn.transforms.Transform):
         self,
         keys: list[str],
         labels: dict,
-        labels_order: dict,
+        label_order: dict,
         target_shape: tuple = None,
         transpose: bool = True,
         pad: bool = True,
@@ -124,7 +124,7 @@ class LoadSegmentationD(mn.transforms.Transform):
         super().__init__()
         self.keys = keys
         self.labels = labels
-        self.labels_order = labels_order
+        self.label_order = label_order
         self.target_shape = target_shape
         self.transpose = transpose
         self.pad = pad
@@ -136,7 +136,7 @@ class LoadSegmentationD(mn.transforms.Transform):
                 output = load_segmentations(
                     data[key],
                     self.labels,
-                    self.labels_order,
+                    self.label_order,
                     self.target_shape,
                     self.transpose,
                     self.pad,
