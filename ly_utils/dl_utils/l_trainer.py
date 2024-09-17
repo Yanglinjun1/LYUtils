@@ -113,14 +113,14 @@ class LYLightningTrainer:
             id=self.wandb_id,
         )
 
-        # Save the wandb run ID
-        if wandb_run_dir is None:
-            wandb_run_dir = f"{self.output_directory}/pl/{self.group}/{self.logger_instance}/wandb_run_id.txt"
-        with open(
-            wandb_run_dir,
-            "w",
-        ) as f:
-            f.write(wandb.run.id)
+        # Save the wandb run ID: TODO
+        # if wandb_run_dir is None:
+        #     wandb_run_dir = f"{self.output_directory}/pl/{self.group}/{self.logger_instance}/wandb_run_id.txt"
+        # with open(
+        #     wandb_run_dir,
+        #     "w",
+        # ) as f:
+        #     f.write(wandb.run.id)
 
         # Setup Trainer
         trainer = L.Trainer(
