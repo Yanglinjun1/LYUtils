@@ -65,8 +65,12 @@ def load_segmentations(
     ## Prep Empty Volume
     x = voxels.shape[1]
     y = voxels.shape[2]
-    channels = len(segmentation_info["segments"])
-
+    
+    # channels: intersection of given labels and segmentation labels from the file
+    segments_names = {Dict['name'] for Dict in segmentation_info["segments"]}
+    given_names = set(labels.keys())
+    final_names = given_names.intersection(segments_names)
+    channels = len(final_names)
     output = np.zeros((channels, x, y))
 
     ## Loop through layers
@@ -77,6 +81,8 @@ def load_segmentations(
         layer = segment["layer"]
         layer_name = segment["name"]
         labelValue = segment["labelValue"]
+        if layer_name not in final_names:
+            continue
 
         ## Set up new layer based on voxel value from segmentation info
         indx = (layer_voxels[layer, ...] == labelValue).nonzero()
