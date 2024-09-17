@@ -136,20 +136,9 @@ class LYSegModelBase(LYLightningModuleBase):
                 dict()
             )  # to log the same metric, e.g., dice, in one plot
 
-            # for each label
-            for ind, label_name in self.label_index.items():
-                if ind == 0 and not self.multi_label:
-                    continue
-                metric_dict_for_log[f"{mode}_{metric}_{label_name}"] = metric_result[
-                    ind
-                ].item()
-
-            # mean metric across labels
-            if self.multi_label:
-                mean_metric = metric_result.mean().item()
-            else:  # if multi_class, skip background
-                mean_metric = metric_result[1:].mean().item()
-            metric_dict_for_log[f"{mode}_{metric}_mean"] = mean_metric
+            # for each label (including 'mean')
+            for label_name, ind in self.label_index.items():
+                metric_dict_for_log[f"{mode}_{metric}_{label_name}"] = metric_result[label_name]
 
             self.log_dict(
                 metric_dict_for_log,
