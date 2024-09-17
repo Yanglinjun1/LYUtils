@@ -44,10 +44,10 @@ class LYSegLosses:
         self.loss_dict = loss_dict
         self.loss_weights = loss_weights
 
-    def __call__(self, pred, seg):
+    def __call__(self, pred, seg, device):
         result_dict = dict()
 
-        sum_loss = torch.zeros([])
+        sum_loss = torch.zeros([], device=device)
         for loss_name, loss_func in self.loss_dict.items():
             loss = loss_func(pred, seg)
             loss_weight = self.loss_weights[loss_name]

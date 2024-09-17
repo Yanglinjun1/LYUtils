@@ -43,7 +43,7 @@ class LYSegModelBase(LYLightningModuleBase):
         img, seg = batch["img"], batch["seg"]
 
         pred = self.model(img)
-        loss_dict = self.loss_func(pred, seg)
+        loss_dict = self.loss_func(pred, seg, device=self.device)
         pred_list = [self.post_process(data) for data in self.decollate_batch(pred)]
 
         # logging: loss
@@ -70,7 +70,7 @@ class LYSegModelBase(LYLightningModuleBase):
         img, seg = batch["img"], batch["seg"]
 
         pred = self.model(img)
-        loss = self.loss_func(pred, seg)
+        loss = self.loss_func(pred, seg, device=self.device)
         pred_list = [self.post_process(data) for data in self.decollate_batch(pred)]
 
         # logging: loss
