@@ -32,7 +32,12 @@ class LYSegLosses:
         for loss in losses:
             loss_name = loss["name"]
             loss_weight = loss.get("weight", 1.0)
-            # TODO check loss types
+
+            if loss_name not in self.supported_losses:
+                raise ValueError(
+                    f"Unsupported metric: {loss_name}. Supported metrics are: {self.supported_losses}"
+                )
+
             if loss_name == "DiceFocalLoss":
                 loss_dict[loss_name] = DiceFocalLoss(
                     include_background=include_background,

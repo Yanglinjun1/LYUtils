@@ -13,7 +13,7 @@ class LYSegMetrics:
     def __init__(
         self,
         metrics: list = ["dice", "hausdorff"],
-        label_index: dict = {"foreground":1},
+        label_index: dict = {"foreground": 1},
         multi_label: bool = False,
     ):
 
@@ -53,7 +53,9 @@ class LYSegMetrics:
             # for each label
             result_tensor = metric_obj.aggregate()
             for label, ind in self.label_index.items():
-                if self.multi_label:  # if multi_label, start from 1-1=0; else (multi-class) start with 1
+                if (
+                    self.multi_label
+                ):  # if multi_label, start from 1-1=0; else (multi-class) start with 1
                     ind -= 1
                 result[label] = result_tensor[ind].item()
 

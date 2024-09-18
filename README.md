@@ -13,6 +13,12 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/18/2024
+
+- The codes worked for training segmentation models
+- **make_deterministic** works
+- wandb's **log_dict** cannot log metrics in the same chart.
+
 ### 09/17/2024
 
 - Checked and to try **LYLightningTrainer**
