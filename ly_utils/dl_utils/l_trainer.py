@@ -52,14 +52,8 @@ class LYLightningTrainer(L.Trainer):
         callback_list=[],
         **kwargs,
     ):
-        # lightning trainer settings
-        self.max_epochs = max_epochs
-        self.check_val_every_n_epoch = check_val_every_n_epoch
+        # output directory
         self.output_directory = output_directory
-        self.precision = precision
-        self.devices = devices
-        self.nodes = nodes
-        self.deterministic = deterministic
 
         # wandb logger
         now = datetime.datetime.now()
@@ -111,14 +105,14 @@ class LYLightningTrainer(L.Trainer):
         )
 
         super().__init__(
-            deterministic=self.deterministic,
+            deterministic=deterministic,
             callbacks=callback_list,
             profiler="simple",
             logger=wandb_logger,
-            precision=self.precision,
+            precision=precision,
             accelerator="gpu",
-            devices=self.devices[0] if is_notebook_running() else self.devices,
-            num_nodes=self.nodes,
+            devices=devices[0] if is_notebook_running() else devices,
+            num_nodes=nodes,
             strategy=(
                 "auto"
                 if is_notebook_running()
@@ -127,8 +121,8 @@ class LYLightningTrainer(L.Trainer):
             default_root_dir=self.output_directory,
             num_sanity_val_steps=0,
             fast_dev_run=False,
-            max_epochs=self.max_epochs,
+            max_epochs=max_epochs,
             use_distributed_sampler=is_notebook_running() is False
-            and len(self.devices) != 1,
-            check_val_every_n_epoch=self.check_val_every_n_epoch,
+            and len(devices) != 1,
+            check_val_every_n_epoch=check_val_every_n_epoch,
         )
