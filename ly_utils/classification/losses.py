@@ -3,10 +3,65 @@
 ##########################################################################################
 
 import torch
+import monai as mn
 from torch.nn.modules.loss import _Loss
 from torch.nn import CrossEntropyLoss  # the regular KL, cross entropy loss
+from typing import List, Dict
 
-__all__ = ["MultiClassFocalLoss"]
+
+class LYClsLosses:
+
+    supported_losses = ["MONAIFocalLoss"]
+
+    def __init__(
+        self,
+        losses: List[Dict] = [{"name": "MONAIFocalLoss", "weight": 1.0}],
+    ):
+
+        loss_dict = dict()
+        loss_weights = dict()
+        for loss in losses:
+            loss_name = loss["name"]
+            loss_weight = loss.get("weight", 1.0)
+
+            if loss_name not in self.supported_losses:
+                raise ValueError(
+                    f"Unsupported metric: {loss_name}. Supported metrics are: {self.supported_losses}"
+                )
+
+            if loss_name == "MONAIFocalLoss":
+                loss_dict[loss_name] = mn.losses.FocalLoss(
+                    to_onehot_y=True, use_softmax=True
+                )
+                loss_weights[loss_name] = loss_weight
+
+        self.loss_dict = loss_dict
+        self.loss_weights = loss_weights
+
+    def __call__(self, pred: Dict, label: Dict, device):
+        result_dict = dict()
+
+        sum_loss = torch.zeros([], device=device)
+        # each loss type
+        for loss_name, loss_func in self.loss_dict.items():
+            loss_weight = self.loss_weights[loss_name]
+
+            current_loss = torch.zeros([], device=device)
+            # each branch
+            for branch_name, tensor in pred.items():
+                # accumulate loss
+                loss = loss_func(tensor, label[branch_name])
+                current_loss += loss
+
+                # "loss_name" + "_branch_name"
+                result_dict[f"{loss_name}_{branch_name}"] = loss.item()
+
+            current_loss /= len(pred)  # average loss across all branches
+            sum_loss += loss_weight * current_loss
+
+        result_dict["sum_loss"] = sum_loss
+
+        return result_dict
 
 
 class MultiClassFocalLoss(_Loss):

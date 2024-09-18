@@ -4,68 +4,105 @@
 
 import torch.nn as nn
 from torchmetrics import MetricCollection
+from typing import Dict, List, Union
 
-__all__ = ["create_metrics", "check_confusion_matrix_metric_name"]
+__all__ = ["LYClsMetrics", "create_metrics", "check_confusion_matrix_metric_name"]
+
+
+class LYClsMetrics:
+    def __init__(self, metric_names, branch_dict: Dict):
+        self.metric_names = metric_names
+        self.branch_dict = branch_dict
+        self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names)
+
+    def __call__(self, pred: Dict, label: Dict):
+        # update the metric value over all branches
+        for branch_name, metric_func in self.metric_func_dict.items():
+            pred_branch, label_branch = pred[branch_name], label[branch_name]
+            metric_func.update(pred_branch, label_branch)
+
+    def aggregate(self):
+        result_dict = dict()
+        for branch_name, metric_func in self.metric_func_dict.items():
+            metric = metric_func.compute()
+
+    def reset(self):
+        for metric_func in self.metric_func_dict.values():
+            metric_func.reset()
 
 
 def create_metrics(
     branch_dict: dict,
-    metric_name: str = "f1",
-    num_classes: int = 3,
+    metric_names: Union[str, List[str]] = ["f1"],
     average: str = "macro",
-) -> MetricCollection:
-    # Check and simplify the metric names, e.g., accuracy -> acc
-    metric_name = check_confusion_matrix_metric_name(metric_name)
+):
+
+    if isinstance(metric_names, str):
+        metric_names = [metric_names]
+
+    # check metric names
+    metric_names2 = list()
+    for metric_name in metric_names:
+        metric_name = check_confusion_matrix_metric_name(metric_name)
+        metric_names2.append(metric_name)
 
     metric_func_dict = nn.ModuleDict()
+    # each branch
     for branch_name, branch_indices in branch_dict.items():
         num_classes = len(branch_indices)
-        if metric_name == "acc":
-            from torchmetrics import Accuracy
 
-            metric_func_dict[branch_name] = Accuracy(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        elif metric_name == "f1":
-            from torchmetrics import F1Score
+        metric_collection = list()
+        # each metric
+        for metric_name in metric_names2:
+            if metric_name == "acc":
+                from torchmetrics import Accuracy
 
-            metric_func_dict[branch_name] = F1Score(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        elif metric_name == "tpr":
-            from torchmetrics import Recall
+                metric_func = Accuracy(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            elif metric_name == "f1":
+                from torchmetrics import F1Score
 
-            metric_func_dict[branch_name] = Recall(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        elif metric_name == "ppv":
-            from torchmetrics import Precision
+                metric_func = F1Score(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            elif metric_name == "tpr":
+                from torchmetrics import Recall
 
-            metric_func_dict[branch_name] = Precision(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        elif metric_name == "tnr":
-            from torchmetrics import Specificity
+                metric_func = Recall(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            elif metric_name == "ppv":
+                from torchmetrics import Precision
 
-            metric_func_dict[branch_name] = Specificity(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        elif metric_name == "ap":
-            from torchmetrics import AveragePrecision
+                metric_func = Precision(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            elif metric_name == "tnr":
+                from torchmetrics import Specificity
 
-            metric_func_dict[branch_name] = AveragePrecision(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        elif metric_name == "auc":
-            from torchmetrics import AUROC
+                metric_func = Specificity(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            elif metric_name == "ap":
+                from torchmetrics import AveragePrecision
 
-            metric_func_dict[branch_name] = AUROC(
-                task="multiclass", num_classes=num_classes, average=average
-            )
-        else:
-            raise NotImplementedError(
-                f"The metric {metric_name} has not been implemented"
-            )
+                metric_func = AveragePrecision(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            elif metric_name == "auc":
+                from torchmetrics import AUROC
+
+                metric_func = AUROC(
+                    task="multiclass", num_classes=num_classes, average=average
+                )
+            else:
+                raise NotImplementedError(
+                    f"The metric {metric_name} has not been implemented"
+                )
+            metric_collection.append(metric_func)
+
+        metric_func_dict[branch_name] = MetricCollection(metric_collection)
 
     return metric_func_dict
 

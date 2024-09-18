@@ -33,7 +33,7 @@ def resume_training(resume_dir):  # TODO
     return result
 
 
-class LYLightningTrainer:
+class LYLightningTrainer(L.Trainer):
     """class original implemented by Bardia Khosravi. Adapted by Linjun Yang"""
 
     def __init__(
@@ -49,9 +49,10 @@ class LYLightningTrainer:
         nodes=1,
         deterministic=True,
         wandb_id=None,
+        callback_list=[],
         **kwargs,
     ):
-        # pytorch lightning trainer
+        # lightning trainer settings
         self.max_epochs = max_epochs
         self.check_val_every_n_epoch = check_val_every_n_epoch
         self.output_directory = output_directory
@@ -69,7 +70,6 @@ class LYLightningTrainer:
             now.hour,
             now.minute,
         )
-
         self.logger_instance = (
             logger_instance
             if logger_instance
@@ -89,6 +89,16 @@ class LYLightningTrainer:
                 "Wandb API key not found. Please set the WANDB_API_KEY environment variable."
             )
 
+        wandb_logger = WandbLogger(
+            save_dir=f"{self.output_directory}",
+            name=self.logger_instance,
+            group=self.group,
+            project=self.wandb_project,
+            offline=False,
+            log_model=False,
+            id=self.wandb_id,
+        )
+
         # output dirs
         os.makedirs(f"{self.output_directory}/pl", exist_ok=True)
         os.makedirs(f"{self.output_directory}/wandb", exist_ok=True)
@@ -100,30 +110,7 @@ class LYLightningTrainer:
             exist_ok=True,
         )
 
-        self.trainer = self.setup_trainer()
-
-    def setup_trainer(self, wandb_run_dir=None, callback_list=[]):
-        wandb_logger = WandbLogger(
-            save_dir=f"{self.output_directory}",
-            name=self.logger_instance,
-            group=self.group,
-            project=self.wandb_project,
-            offline=False,
-            log_model=False,
-            id=self.wandb_id,
-        )
-
-        # Save the wandb run ID: TODO
-        # if wandb_run_dir is None:
-        #     wandb_run_dir = f"{self.output_directory}/pl/{self.group}/{self.logger_instance}/wandb_run_id.txt"
-        # with open(
-        #     wandb_run_dir,
-        #     "w",
-        # ) as f:
-        #     f.write(wandb.run.id)
-
-        # Setup Trainer
-        trainer = L.Trainer(
+        super().__init__(
             deterministic=self.deterministic,
             callbacks=callback_list,
             profiler="simple",
@@ -145,7 +132,3 @@ class LYLightningTrainer:
             and len(self.devices) != 1,
             check_val_every_n_epoch=self.check_val_every_n_epoch,
         )
-        return trainer
-
-    def fit(self, lm, dm, ckpt_path=None):
-        self.trainer.fit(lm, datamodule=dm, ckpt_path=ckpt_path)

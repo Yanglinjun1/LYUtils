@@ -150,7 +150,7 @@ class LYSegModelBase(LYLightningModuleBase):
             )
 
     def process_configurations(self, model_cfg, train_hyp):
-        # e.g., 0:'background'
+        # e.g., 'foreground': 1
         label_index = model_cfg.get("label_index", None)
         if label_index is None:
             raise ValueError("Please specify the label index in the model configuration!")
