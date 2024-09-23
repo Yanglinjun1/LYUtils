@@ -21,6 +21,7 @@ def summarize_iccs(
     return_str_result: bool = True,
     icc_type: str = "ICC2",
     nan_policy: str = "omit",
+    bracket: str = "parentheses",
 ):
     """
     Author: Linjun Yang. Ph.D.
@@ -106,7 +107,10 @@ def summarize_iccs(
         for rating in ratings:
             icc_str = f"{result_dict[rating][0]:.2f}"
             ci95_str = " ".join([str(np.round(val, 2)) for val in result_dict[rating][1]])
-            str_result_dict[rating] = f"{icc_str} [{ci95_str}]"
+            if bracket == "parentheses":
+                str_result_dict[rating] = f"{icc_str} ({ci95_str})"
+            else:
+                str_result_dict[rating] = f"{icc_str} [{ci95_str}]"
         return result_dict, str_result_dict
     else:
         return result_dict

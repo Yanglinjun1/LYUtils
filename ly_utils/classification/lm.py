@@ -43,7 +43,7 @@ class LYClsModelBase(LYLightningModuleBase):
         self.log_loss(loss_dict, "train")
 
         # logging: metric
-        _ = self.train_metric_func(pred, label)
+        self.train_metric_func(pred, label)
 
         loss = loss_dict["sum_loss"]
 
@@ -69,7 +69,7 @@ class LYClsModelBase(LYLightningModuleBase):
         self.log_loss(loss, "val")
 
         # logging: metric
-        _ = self.val_metric_func(pred, label)
+        self.val_metric_func(pred, label)
 
         # logging image: TODO
 
@@ -108,24 +108,19 @@ class LYClsModelBase(LYLightningModuleBase):
                 )
 
     def log_metric(self, result_dict, mode="train"):  # TODO
+        metric_dict_for_log = dict()
+        for name, value in result_dict.items():
+            # e.g., "train_side_f1" or "val_view_auc"
+            metric_dict_for_log[f"{mode}_{name}"] = value
 
-        for metric, metric_result in result_dict.items():
-            metric_dict_for_log = (
-                dict()
-            )  # to log the same metric, e.g., dice, in one plot
-
-            # for each label (including 'mean')
-            for label_name, value in metric_result.items():
-                metric_dict_for_log[f"{mode}_{metric}_{label_name}"] = value
-
-            self.log_dict(
-                metric_dict_for_log,
-                on_epoch=True,
-                on_step=False,
-                prog_bar=False,
-                logger=True,
-                sync_dist=True,
-            )
+        self.log_dict(
+            metric_dict_for_log,
+            on_epoch=True,
+            on_step=False,
+            prog_bar=False,
+            logger=True,
+            sync_dist=True,
+        )
 
     def process_configurations(self, model_cfg, train_hyp):
         # e.g., 0:'background'

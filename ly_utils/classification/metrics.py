@@ -3,7 +3,6 @@
 ##########################################################################################
 
 import torch.nn as nn
-from torchmetrics import MetricCollection
 from typing import Dict, List, Union
 
 __all__ = ["LYClsMetrics", "create_metrics", "check_confusion_matrix_metric_name"]
@@ -16,19 +15,31 @@ class LYClsMetrics:
         self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names)
 
     def __call__(self, pred: Dict, label: Dict):
-        # update the metric value over all branches
-        for branch_name, metric_func in self.metric_func_dict.items():
+        # over all branches
+        for branch_name, branch_metrics in self.metric_func_dict.items():
             pred_branch, label_branch = pred[branch_name], label[branch_name]
-            metric_func.update(pred_branch, label_branch)
+            
+            # over all metrics
+            for _, metric_func in branch_metrics.items():
+                metric_func.update(pred_branch, label_branch)
 
     def aggregate(self):
         result_dict = dict()
-        for branch_name, metric_func in self.metric_func_dict.items():
-            metric = metric_func.compute()
+        # over all branches
+        for branch_name, branch_metrics in self.metric_func_dict.items():
+            # over all metrics
+            for metric_name, metric_func in branch_metrics.items():
+                value = metric_func.compute().item()
+                result_dict[f"{branch_name}_{metric_name}"] = value
+                
+        return result_dict
 
     def reset(self):
-        for metric_func in self.metric_func_dict.values():
-            metric_func.reset()
+        # over all branches
+        for _, branch_metrics in self.metric_func_dict.items():
+            # over all metrics
+            for _, metric_func in branch_metrics.items():
+                metric_func.reset()
 
 
 def create_metrics(
@@ -51,7 +62,7 @@ def create_metrics(
     for branch_name, branch_indices in branch_dict.items():
         num_classes = len(branch_indices)
 
-        metric_collection = list()
+        branch_metrics = nn.ModuleDict()
         # each metric
         for metric_name in metric_names2:
             if metric_name == "acc":
@@ -100,9 +111,9 @@ def create_metrics(
                 raise NotImplementedError(
                     f"The metric {metric_name} has not been implemented"
                 )
-            metric_collection.append(metric_func)
+            branch_metrics[metric_name] = metric_func
 
-        metric_func_dict[branch_name] = MetricCollection(metric_collection)
+        metric_func_dict[branch_name] = branch_metrics
 
     return metric_func_dict
 
