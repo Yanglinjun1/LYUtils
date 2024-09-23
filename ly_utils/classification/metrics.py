@@ -18,7 +18,7 @@ class LYClsMetrics:
         # over all branches
         for branch_name, branch_metrics in self.metric_func_dict.items():
             pred_branch, label_branch = pred[branch_name], label[branch_name]
-            
+
             # over all metrics
             for _, metric_func in branch_metrics.items():
                 metric_func.update(pred_branch, label_branch)
@@ -31,7 +31,7 @@ class LYClsMetrics:
             for metric_name, metric_func in branch_metrics.items():
                 value = metric_func.compute().item()
                 result_dict[f"{branch_name}_{metric_name}"] = value
-                
+
         return result_dict
 
     def reset(self):

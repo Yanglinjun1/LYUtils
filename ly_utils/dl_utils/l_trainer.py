@@ -122,7 +122,6 @@ class LYLightningTrainer(L.Trainer):
             num_sanity_val_steps=0,
             fast_dev_run=False,
             max_epochs=max_epochs,
-            use_distributed_sampler=is_notebook_running() is False
-            and len(devices) != 1,
+            use_distributed_sampler=is_notebook_running() is False and len(devices) != 1,
             check_val_every_n_epoch=check_val_every_n_epoch,
         )

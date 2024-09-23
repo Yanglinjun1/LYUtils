@@ -9,6 +9,7 @@ setuptools.setup(
     install_requires=[
         "pandas",
         "numpy",
+        "scipy",
         "pingouin==0.5.4",
         "lightning>=2.1.0",
         "torchmetrics>=1.4",
@@ -18,6 +19,8 @@ setuptools.setup(
         "segmentation-models-pytorch",
         "pynrrd",
         "slicerio==1.0.0",
+        "opencv-python>=4.9",
+        "scikit-image==0.19.3",
         "wandb",
     ],
     classifiers=[

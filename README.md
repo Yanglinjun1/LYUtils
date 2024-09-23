@@ -13,6 +13,13 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/23/2024
+
+- Added **chi2_test** in statistic module to do chi-square test
+- Added **measure.py** in segmentation module and included common basic measuring functions
+- Updated the setup.py
+- All added functions to be tested.
+
 ### 09/18/2024
 
 - The codes worked for training segmentation models

@@ -5,9 +5,10 @@
 import numpy as np
 import pandas as pd
 import pingouin as pg
+from scipy.stats import chi2_contingency
 from typing import Union, List, Dict
 
-__all__ = ["summarize_iccs"]
+__all__ = ["summarize_iccs", "chi2_test"]
 
 ################################################################################
 # -F: summarize_iccs
@@ -41,6 +42,7 @@ def summarize_iccs(
         return_str_result (bool, optional): if to generate string of resulting ICC values for table generation. Defaults to True.
         icc_type (str, optional): type of ICC value to calculate. Defaults to "ICC2" (Single random raters).
         nan_policy (str, optional): how to handle NaN value when using pg.intraclass_corr. Defaults to "omit".
+        bracket (str, optional): type of bracket to use for the confidence interval. Defaults to "parentheses".
 
     Returns:
         dict: result_dict of rating: (ICC, CI95) and str_result_dict of rating: "ICC [CI95]"
@@ -114,3 +116,50 @@ def summarize_iccs(
         return result_dict, str_result_dict
     else:
         return result_dict
+
+
+def chi2_test(
+    df: pd.DataFrame, group_col: str, class_col: str, print_results: bool = False
+):
+    """
+    Perform a chi-square test of independence on a DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - group_col (str): The name of the column representing the grouping variable.
+    - class_col (str): The name of the column representing the class variable.
+    - print_results (bool): Whether to print the test results. Default is False.
+
+    Returns:
+    - chi2 (float): The chi-square test statistic.
+    - p (float): The p-value of the test.
+    - dof (int): The degrees of freedom.
+    - expected (ndarray): The expected frequencies table.
+
+    Example:
+    >>> df = pd.DataFrame({'Group': ['A', 'A', 'B', 'B'], 'Class': ['X', 'Y', 'X', 'Y']})
+    >>> chi2_test(df, 'Group', 'Class', print_results=True)
+    Chi2 Statistic: 0.5
+    P-value: 0.479
+    Degrees of Freedom: 1
+    Expected Frequencies Table:
+    [[0.5 0.5]
+     [0.5 0.5]]
+    (0.5, 0.479, 1, array([[0.5, 0.5],
+           [0.5, 0.5]]))
+    """
+
+    # Create a contingency table
+    contingency_table = pd.crosstab(df[group_col], df[class_col])
+
+    # Perform Chi-square test
+    chi2, p, dof, expected = chi2_contingency(contingency_table)
+
+    if print_results:
+        print(f"Chi2 Statistic: {chi2}")
+        print(f"P-value: {p}")
+        print(f"Degrees of Freedom: {dof}")
+        print("Expected Frequencies Table:")
+        print(expected)
+
+    return chi2, p, dof, expected
