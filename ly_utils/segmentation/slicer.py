@@ -53,6 +53,10 @@ def load_segmentations(
     ## Load Data
     segmentation_info = slicerio.read_segmentation(path, skip_voxels=True)
     voxels, _ = nrrd.read(path)
+    
+    ## get mapping of layer names to index in segmentation_info["segments"]
+    segments = segmentation_info["segments"]
+    segment_names = {segment["name"]: i for i, segment in enumerate(segments)}
 
     ## Add the first channels dim if not present
     if len(voxels.shape) == 3:
@@ -66,32 +70,39 @@ def load_segmentations(
     x = voxels.shape[1]
     y = voxels.shape[2]
 
-    # channels: intersection of given labels and segmentation labels from the file
-    segments_names = {Dict["name"] for Dict in segmentation_info["segments"]}
-    given_names = set(labels.keys())
-    final_names = given_names.intersection(segments_names)
-    channels = len(final_names)
+    # channels: the number of given labels
+    channels = len(labels)
     output = np.zeros((channels, x, y))
 
     ## Loop through layers
     layer_voxels = np.squeeze(voxels, axis=-1)
-    for i, segment in enumerate(segmentation_info["segments"]):
-
-        ## Extract Metadata
-        layer = segment["layer"]
-        layer_name = segment["name"]
-        labelValue = segment["labelValue"]
-        if layer_name not in final_names:
+    print(f"Processing file {path}")
+    for label in labels.keys():
+        
+        # (x, y) is the shape of the layer
+        new_layer = np.zeros((x, y))
+        
+        ## get the segment index for the given label
+        segment_ind = segment_names.get(label, None)
+        
+        ## assign all zeros if the current label is not in the segmentation file
+        if segment_ind is None:
+            print(f"Label {label} not found in segmentation file. It will not be in the final segmentation array.")
+            output[labels[label] - 1, ...] = new_layer
             continue
+        
+        ## segment info is available for the current label
+        segment = segments[segment_ind]
+        layer = segment["layer"]
+        labelValue = segment["labelValue"]
 
         ## Set up new layer based on voxel value from segmentation info
         indx = (layer_voxels[layer, ...] == labelValue).nonzero()
-        new_layer = np.zeros((x, y))  # (x, y) is the shape of the layer
         new_layer[indx] = 1
 
         ## Assign the new layer to the output based on defined channel order
         # label starts with 1 not zero, minus 1 is needed
-        output[labels[layer_name] - 1, ...] = new_layer
+        output[labels[label] - 1, ...] = new_layer
 
     # Resize to target shape
     if target_shape is not None:
