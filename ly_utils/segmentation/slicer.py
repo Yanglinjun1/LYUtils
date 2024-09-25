@@ -53,7 +53,7 @@ def load_segmentations(
     ## Load Data
     segmentation_info = slicerio.read_segmentation(path, skip_voxels=True)
     voxels, _ = nrrd.read(path)
-    
+
     ## get mapping of layer names to index in segmentation_info["segments"]
     segments = segmentation_info["segments"]
     segment_names = {segment["name"]: i for i, segment in enumerate(segments)}
@@ -78,19 +78,21 @@ def load_segmentations(
     layer_voxels = np.squeeze(voxels, axis=-1)
     print(f"Processing file {path}")
     for label in labels.keys():
-        
+
         # (x, y) is the shape of the layer
         new_layer = np.zeros((x, y))
-        
+
         ## get the segment index for the given label
         segment_ind = segment_names.get(label, None)
-        
+
         ## assign all zeros if the current label is not in the segmentation file
         if segment_ind is None:
-            print(f"Label {label} not found in segmentation file. It will not be in the final segmentation array.")
+            print(
+                f"Label {label} not found in segmentation file. It will not be in the final segmentation array."
+            )
             output[labels[label] - 1, ...] = new_layer
             continue
-        
+
         ## segment info is available for the current label
         segment = segments[segment_ind]
         layer = segment["layer"]

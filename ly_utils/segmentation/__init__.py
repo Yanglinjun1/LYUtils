@@ -13,4 +13,5 @@ from .measure import (
     line2line_distance,
     calculate_angle_from_lines,
     calculate_angle_from_points,
+    calculate_distances_between_two_point_sets,
 )

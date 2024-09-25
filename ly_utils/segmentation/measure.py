@@ -12,6 +12,7 @@ __all__ = [
     "line2line_distance",
     "calculate_angle_from_lines",
     "calculate_angle_from_points",
+    "calculate_distances_between_two_point_sets",
 ]
 
 
@@ -182,3 +183,29 @@ def calculate_angle_from_points(vertex=None, p1=None, p2=None, degree=True):
         angle *= 57.29578  # radian to degree
 
     return angle
+
+
+def calculate_distances_between_two_point_sets(set1, set2):
+    """
+    Calculate the Euclidean distances between each pair of points from two sets.
+
+    Parameters:
+    - set1 (np.array): An NxD array where N is the number of points and D is the dimension of each point.
+    - set2 (np.array): An MxD array where M is the number of points and D is the dimension of each point.
+
+    Returns:
+    - np.array: An NxM array of distances where the element at (i, j) is the distance between
+    set1[i] and set2[j].
+    """
+    # Ensure inputs are numpy arrays
+    set1 = np.array(set1)
+    set2 = np.array(set2)
+
+    # Subtract each point in set1 from each point in set2
+    # The shape of diff will be (N, M, D)
+    diff = set1[:, np.newaxis, :] - set2[np.newaxis, :, :]
+
+    # Compute the squared differences, sum across the columns, and take the square root
+    distances = np.sqrt(np.sum(diff**2, axis=2))
+
+    return distances

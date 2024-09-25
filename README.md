@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/25/2024
+
+- Added **calculate_distances_between_two_point_sets** to measure.py
+
 ### 09/23/2024
 
 - Added **chi2_test** in statistic module to do chi-square test
