@@ -36,6 +36,8 @@ class LYClsModelBase(LYLightningModuleBase):
     def training_step(self, batch, batch_idx):
         img, label = batch["img"], batch["label"]
 
+        label = self.move_label_to_device(label, device=self.device)
+
         pred = self.model(img)
         loss_dict = self.loss_func(pred, label, device=self.device)
 
@@ -61,6 +63,8 @@ class LYClsModelBase(LYLightningModuleBase):
 
     def validation_step(self, batch, batch_idx):
         img, label = batch["img"], batch["label"]
+
+        label = self.move_label_to_device(label, device=self.device)
 
         pred = self.model(img)
         loss = self.loss_func(pred, label, device=self.device)
@@ -164,3 +168,10 @@ class LYClsModelBase(LYLightningModuleBase):
     def build_post_processing(self):
 
         raise NotImplementedError("Please implement the post processing function!")
+
+    def move_label_to_device(self, label, device):
+        label_device = dict()
+        for branch_name, branch_tensor in label:
+            label_device[branch_name] = branch_tensor.to(device)
+
+        return label_device

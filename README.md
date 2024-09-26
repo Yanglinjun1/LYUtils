@@ -13,6 +13,11 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/26/2024
+
+- Cleaned up __init__.py file of **ly_utils.classification**.
+- Added **move_label_to_device** function to make sure dictionary-based label is in the GPU device.
+
 ### 09/25/2024
 
 - Added **calculate_distances_between_two_point_sets** to measure.py
