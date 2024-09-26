@@ -4,6 +4,7 @@
 
 import torch.nn as nn
 from typing import Dict, List, Union
+import monai as mn
 
 __all__ = ["LYClsMetrics", "create_metrics", "check_confusion_matrix_metric_name"]
 
@@ -21,6 +22,10 @@ class LYClsMetrics:
         # over all branches
         for branch_name, branch_metrics in self.metric_func_dict.items():
             pred_branch, label_branch = pred[branch_name], label[branch_name]
+            
+            # convert to regular tensor if need to
+            if isinstance(pred_branch, mn.data.meta_tensor.MetaTensor):
+                pred_branch = pred_branch.as_tensor()
 
             # over all metrics
             for _, metric_func in branch_metrics.items():
