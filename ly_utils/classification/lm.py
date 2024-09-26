@@ -171,7 +171,7 @@ class LYClsModelBase(LYLightningModuleBase):
 
     def move_label_to_device(self, label, device):
         label_device = dict()
-        for branch_name, branch_tensor in label:
+        for branch_name, branch_tensor in label.items():
             label_device[branch_name] = branch_tensor.to(device)
 
         return label_device
