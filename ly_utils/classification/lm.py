@@ -45,7 +45,7 @@ class LYClsModelBase(LYLightningModuleBase):
         self.log_loss(loss_dict, "train")
 
         # logging: metric
-        self.train_metric_func(pred, label)
+        self.train_metric_func(pred, label, device=self.device)
 
         loss = loss_dict["sum_loss"]
 
@@ -73,7 +73,7 @@ class LYClsModelBase(LYLightningModuleBase):
         self.log_loss(loss, "val")
 
         # logging: metric
-        self.val_metric_func(pred, label)
+        self.val_metric_func(pred, label, device=self.device)
 
         # logging image: TODO
 
