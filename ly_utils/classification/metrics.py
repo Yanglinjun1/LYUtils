@@ -15,6 +15,10 @@ class LYClsMetrics:
         self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names)
 
     def __call__(self, pred: Dict, label: Dict):
+        # move to the same device
+        device = pred[self.branch_dict.keys()[0]].device
+        self.metric_func_dict.to(device)
+        
         # over all branches
         for branch_name, branch_metrics in self.metric_func_dict.items():
             pred_branch, label_branch = pred[branch_name], label[branch_name]
