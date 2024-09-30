@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 09/30/2024
+
+- Provided docstrings for most functions and classes.
+
 ### 09/26/2024
 
 - Cleaned up __init__.py file of **ly_utils.classification**.

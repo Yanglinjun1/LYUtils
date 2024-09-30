@@ -10,6 +10,33 @@ from typing import List, Dict
 
 
 class LYClsLosses:
+    """
+    Class for calculating losses for multi-branch classification tasks.
+
+    Args:
+        losses (List[Dict]): List of dictionaries specifying the losses to be used for each branch.
+            Each dictionary should contain the following keys:
+            - "name" (str): Name of the loss function.
+            - "weight" (float, optional): Weight for the loss function. Default is 1.0.
+
+    Attributes:
+        supported_losses (List[str]): List of supported loss function names for checking purpose.
+        loss_dict: Dictionary containing the loss functions, each of which will be used for all branches.
+        loss_weights: Dictionary containing the weights for each loss function.
+
+    Methods:
+        __call__(self, pred: Dict, label: Dict, device) -> Dict: Calculates the loss for each branch
+            of the task and returns a dictionary containing loss values for each branch and the sum
+            of all losses.
+
+    Example:
+        losses = [
+            {"name": "MONAIFocalLoss", "weight": 1.0},
+            {"name": "AnotherLoss", "weight": 0.5}
+        ]
+        cls_losses = LYClsLosses(losses)
+        result = cls_losses(pred, label, device)
+    """
 
     supported_losses = ["MONAIFocalLoss"]
 
@@ -39,6 +66,19 @@ class LYClsLosses:
         self.loss_weights = loss_weights
 
     def __call__(self, pred: Dict, label: Dict, device):
+        """to be called in the training/validation step of the lightning module to
+        calculate the loss for each branch of the task. Also, the "sum_loss" is calculated
+        for backpropagation.
+
+        Args:
+            pred (Dict): dictionary containing predictions for each branch of task
+            label (Dict): dictionary labels containing labels for each branch of task
+            device: to device to calculate the loss; provide self.device from lightning module
+
+        Returns:
+            result_dict: dictionary containing loss values for each branch (for logging only)
+            and the sum of all losses (for logging and backpropagation)
+        """
         result_dict = dict()
 
         sum_loss = torch.zeros([], device=device)
@@ -67,7 +107,9 @@ class LYClsLosses:
 class MultiClassFocalLoss(_Loss):
     """
     This function implements and extends the original binary focal
-    loss proposed by Lin et al to multi-class focal loss
+    loss proposed by Lin et al to multi-class focal loss.
+
+    This class is not being used anymore, please use MONAIFocalLoss instead.
     """
 
     def __init__(self, gamma=2.0, weight=None, reduction="mean"):

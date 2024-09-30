@@ -8,6 +8,24 @@ from typing import List, Dict
 
 
 class LYSegLosses:
+    """
+    Class representing a collection of segmentation loss functions (based on MONAI loss functions).
+
+    Args:
+        losses (List[Dict]): A list of dictionaries specifying the loss functions to be used.
+            Each dictionary should contain the keys 'name' (str) and 'weight' (float, optional).
+            The 'name' key specifies the name of the loss function, and the 'weight' key specifies
+            the weight to be applied to the loss function. Default is [{'name': 'DiceFocalLoss', 'weight': 1.0}].
+        multi_label (bool): Flag indicating whether the segmentation task is multi-label or multi-class.
+            If True, the loss functions will include the background class and use sigmoid activation.
+            If False, the loss functions will not include the background class and use softmax activation.
+            Default is False.
+
+    Attributes:
+        loss_dict (dict): A dictionary mapping loss function names to their corresponding loss function objects.
+        loss_weights (dict): A dictionary mapping loss function names to their corresponding weights.
+
+    """
 
     supported_losses = ["DiceFocalLoss"]
 
@@ -50,6 +68,19 @@ class LYSegLosses:
         self.loss_weights = loss_weights
 
     def __call__(self, pred, seg, device):
+        """
+        Calculates the loss for the given predicted segmentation and ground truth segmentation.
+
+        Args:
+            pred (torch.Tensor): The predicted segmentation tensor.
+            seg (torch.Tensor): The ground truth segmentation tensor.
+            device (torch.device): The device on which the tensors are located.
+
+        Returns:
+            dict: A dictionary containing the individual losses (for logging) and the sum of all losses
+            (for logging and backpropagation).
+        """
+
         result_dict = dict()
 
         sum_loss = torch.zeros([], device=device)

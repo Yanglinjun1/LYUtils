@@ -11,7 +11,28 @@ import torch
 
 
 class DictLabelsD(mn.transforms.Transform):
-    """ """
+    """
+    A custom MONAI transform to convert a label array into a dictionary format, according to the provided
+    arguments "label_index" and "branch_dict". The "branch_dict" is a dictionary mapping branch names to their
+    indices in the label array. Each label array is converted into a dictionary where the keys are the branch names
+    and the values are the corresponding indexed label converted into a integer tensor (not one-hot for loss calculation
+    purpose) using the associated indices. It is only intended to be used for MONAI dictionary data transform and
+    only for 1D classification label array, not for imaging or bounding box data.
+
+    Example:
+        label_index = {0: "left", 1: "right", 2: "AP": 3: "PA", 4: "Y"}
+        branch_dict = {"side": [0, 1], "view2": [2, 3]}
+        keys = ["label"]
+        transform = DictLabelsD(keys, label_index, branch_dict)
+        data = {"label": np.array([0, 1, 0, 0, 1])} # "right", "Y"
+        out = transform(data) # {"side": tensor(1), "view2": tensor(2)}
+
+    Args:
+        keys (KeysCollection): The keys in the data dictionary that contain label data.
+        label_index (dict): A dictionary mapping label names to their corresponding indices.
+        branch_dict (dict): A dictionary mapping branch names to their corresponding indices.
+
+    """
 
     def __init__(self, keys: KeysCollection, label_index: dict, branch_dict: dict):
         super().__init__()
@@ -37,8 +58,12 @@ class DictLabelsD(mn.transforms.Transform):
 
 class DictLabelCollateD:
     """
-    Created on 05/19/2022, used to concatenate labels stored in the dictionary
-    Modifed on 07/30/2024 to process dictionary data
+    A custom collate function to collate the MONAI dictionary data, e.g., {"img": tensor, "label": dict, ...} in
+    the monai or torch data loader. It is only intended to be used for MONAI dictionary data collate and with
+    predefined set of keys, including "img" and "label". The "label" key should contain a dictionary with keys as
+    the branch names and values as the corresponding label tensors. The function will stack the image tensors and
+    labels tensors for each branch name in the dictionary. You should also provide set of keys that should be ignored,
+    such as those keys for the bounding box data (which are used for cropping images only and not used for training).
     """
 
     def __init__(self, branch_names, data_keys, ignore_keys=["xyxy", "xywhn"]):

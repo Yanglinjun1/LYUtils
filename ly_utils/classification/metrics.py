@@ -10,19 +10,42 @@ __all__ = ["LYClsMetrics", "create_metrics", "check_confusion_matrix_metric_name
 
 
 class LYClsMetrics:
+    """
+    Class for computing and aggregating metrics for multi-branch classification tasks.
+    """
+
     def __init__(self, metric_names, branch_dict: Dict):
+        """
+        Initializes the LYClsMetrics object. Besides the metric names and the branch dictionary,
+        the metric functions will also be created and stored in the object. It is a torch.nn.ModuleDict
+        that contains the metric functions for each branch. The metric function for each branch is also
+        a torch.nn.ModuleDict that contains the metric functions for each metric. Defaults to use "macro"
+        averaging for all metrics and give metric values for each branch.
+
+        Args:
+            metric_names (list): List of metric names to compute.
+            branch_dict (dict): Dictionary containing the branches and their corresponding metric functions.
+        """
         self.metric_names = metric_names
         self.branch_dict = branch_dict
         self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names)
 
     def __call__(self, pred: Dict, label: Dict, device):
+        """
+        Computes the metrics for the given predictions and labels.
+
+        Args:
+            pred (dict): Dictionary containing the predicted values for each branch.
+            label (dict): Dictionary containing the true labels for each branch.
+            device: The device to move the metric functions to.
+        """
         # move to the same device
         self.metric_func_dict.to(device)
-        
+
         # over all branches
         for branch_name, branch_metrics in self.metric_func_dict.items():
             pred_branch, label_branch = pred[branch_name], label[branch_name]
-            
+
             # convert to regular tensor if need to
             if isinstance(pred_branch, mn.data.meta_tensor.MetaTensor):
                 pred_branch = pred_branch.as_tensor()
@@ -32,6 +55,12 @@ class LYClsMetrics:
                 metric_func.update(pred_branch, label_branch)
 
     def aggregate(self):
+        """
+        Aggregates the computed metrics across all branches.
+
+        Returns:
+            dict: Dictionary containing the aggregated metric values.
+        """
         result_dict = dict()
         # over all branches
         for branch_name, branch_metrics in self.metric_func_dict.items():
@@ -43,6 +72,9 @@ class LYClsMetrics:
         return result_dict
 
     def reset(self):
+        """
+        Resets the metric functions to their initial state.
+        """
         # over all branches
         for _, branch_metrics in self.metric_func_dict.items():
             # over all metrics
@@ -55,7 +87,18 @@ def create_metrics(
     metric_names: Union[str, List[str]] = ["f1"],
     average: str = "macro",
 ):
+    """
+    Create a dictionary of metric functions for multi-class classification.
 
+    Args:
+        branch_dict (dict): A dictionary mapping branch names to branch indices.
+        metric_names (Union[str, List[str]], optional): Names of the metrics to be created. Defaults to ["f1"].
+        average (str, optional): Type of averaging to be applied for multi-class metrics. Defaults to "macro".
+
+    Returns:
+        nn.ModuleDict: A dictionary of metric functions, where the keys are branch names and the values are
+        nn.ModuleDict objects containing the metric functions for each metric name.
+    """
     if isinstance(metric_names, str):
         metric_names = [metric_names]
 

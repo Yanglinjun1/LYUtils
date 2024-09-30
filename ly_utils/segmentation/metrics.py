@@ -7,8 +7,16 @@ from monai.metrics import DiceMetric, HausdorffDistanceMetric
 
 
 class LYSegMetrics:
+    """
+    Class for computing segmentation metrics.
 
-    supported_metrics = ["dice", "hausdorff"]
+    Args:
+        metrics (list, optional): List of metrics to compute. Defaults to ["dice", "hausdorff"].
+        label_index (dict, optional): Dictionary mapping label names to indices. Defaults to {"foreground": 1}.
+        multi_label (bool, optional): Flag indicating whether the segmentation is multi-label. Defaults to False.
+    """
+
+    supported_metrics = ["dice", "hausdorff"]  # for checking purposes
 
     def __init__(
         self,
@@ -16,6 +24,16 @@ class LYSegMetrics:
         label_index: dict = {"foreground": 1},
         multi_label: bool = False,
     ):
+        """
+        Initializes the LYSegMetrics object. Supported metrics are "dice" and "hausdorff". include_background
+        is set to True. The reduction is set to "mean_batch".
+
+
+        Args:
+            metrics (list, optional): List of metrics to compute. Defaults to ["dice", "hausdorff"].
+            label_index (dict, optional): Dictionary mapping label names to indices. Defaults to {"foreground": 1}.
+            multi_label (bool, optional): Flag indicating whether the segmentation is multi-label. Defaults to False.
+        """
 
         self.multi_label = multi_label
         self.label_index = label_index
@@ -38,6 +56,17 @@ class LYSegMetrics:
         self.metric_dict = metric_dict
 
     def __call__(self, pred, seg):
+        """
+        Computes the segmentation metrics.
+
+        Args:
+            pred: Predicted segmentation.
+            seg: Ground truth segmentation.
+
+        Returns:
+            dict: Dictionary containing the computed metrics.
+        """
+
         result_dict = dict()
         for metric, metric_obj in self.metric_dict.items():
             result = metric_obj(pred, seg)
@@ -46,6 +75,14 @@ class LYSegMetrics:
         return result_dict
 
     def aggregate(self):
+        """
+        Aggregates the computed metrics. The aggregation is performed according to if the segmentation
+        is multi-label or multi-class.
+
+        Returns:
+            dict: Dictionary containing the aggregated metrics.
+        """
+
         result_dict = dict()
         for metric, metric_obj in self.metric_dict.items():
             result = dict()  # for current metric, e.g. dice
@@ -70,5 +107,9 @@ class LYSegMetrics:
         return result_dict
 
     def reset(self):
+        """
+        Resets the metrics.
+
+        """
         for metric_obj in self.metric_dict.values():
             metric_obj.reset()

@@ -22,7 +22,7 @@ def load_segmentations(
     """
     This function reads a given segmentation file in .seg.nrrd format and return the numpy array
     of the segmentation data in one of the two formats: multi-label (multi-channel, binary value) or multi-class (
-    single-channel, multiple value). The labels argument is needed to specify the channel index at the output array and
+    single-channel, multiple value). The "labels" (historitically "label_index") argument is needed to specify the channel index at the output array and
     /or pixel value at the single channel output for each class label. The label_order argument is specified
     to define the order that labels overwrite each other, and it's only used when creating multi-class segmentation map.
     The target_shape argument is used to resize the segmentation map to the desired shape. The transpose argument is used

@@ -6,6 +6,8 @@ from ..dl_utils.base_dm import LYDataModuleBase
 
 
 class LYClsDataModuleBase(LYDataModuleBase):
+    """Simply inherit from LYDataModuleBase for classification data module development."""
+
     def __init__(
         self,
         collate_fn=None,

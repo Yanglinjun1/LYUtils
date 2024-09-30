@@ -12,6 +12,23 @@ from timm.models import load_checkpoint
 
 
 def create_cls_model(model_name, in_channels, label_index, branch_dict, **kwargs):
+    """
+    Create a classification model based on the given parameters. You should provide the model name,
+    the number of input channels, the label index, and the branch dictionary. The function will return
+    the corresponding classification model. Right now only supports EfficientNet and ConvNextV2 models.
+    You can also provide the path to the pre-trained weights if you want to load them by passing it as
+    "weights_path". More models, such as MultiBranchViT, will be implemented in the future.
+
+    Args:
+        model_name (str): The name of the model.
+        in_channels (int): The number of input channels.
+        label_index (list): The list of label indices.
+        branch_dict (dict): The dictionary containing branch information.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        model: The created classification model.
+    """
 
     model_kwargs = dict()
     model_kwargs["model_name"] = model_name
@@ -41,6 +58,8 @@ def create_cls_model(model_name, in_channels, label_index, branch_dict, **kwargs
     elif model_name in ["convnextv2_tiny.fcmae_ft_in22k_in1k_384"]:
         model_kwargs["weights_path"] = weight_path
         model = MultiBranchConvNext(**model_kwargs)
+    else:
+        raise ValueError(f"Model {model_name} is not supported.")
 
     return model
 
@@ -93,14 +112,14 @@ class MultiBranchEfficientNet(EfficientNet):
         advprop=False,
         in_channels=3,
         num_classes=1000,
-        **override_params
+        **override_params,
     ):
         model = cls.from_name(
             model_name,
             label_index=label_index,
             branch_dict=branch_dict,
             num_classes=num_classes,
-            **override_params
+            **override_params,
         )
         load_pretrained_weights(
             model,
@@ -123,7 +142,7 @@ class MultiBranchConvNext(nn.Module):
         pooling="avg",
         in_channels=1,
         num_classes=8,
-        **kwargs
+        **kwargs,
     ):
         super().__init__()
 
