@@ -14,7 +14,7 @@ class LYClsMetrics:
     Class for computing and aggregating metrics for multi-branch classification tasks.
     """
 
-    def __init__(self, metric_names, branch_dict: Dict):
+    def __init__(self, metric_names, branch_dict: Dict, average: str = "macro"):
         """
         Initializes the LYClsMetrics object. Besides the metric names and the branch dictionary,
         the metric functions will also be created and stored in the object. It is a torch.nn.ModuleDict
@@ -28,7 +28,8 @@ class LYClsMetrics:
         """
         self.metric_names = metric_names
         self.branch_dict = branch_dict
-        self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names)
+        self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names, self.average)
+        self.average = average
 
     def __call__(self, pred: Dict, label: Dict, device):
         """
@@ -66,8 +67,12 @@ class LYClsMetrics:
         for branch_name, branch_metrics in self.metric_func_dict.items():
             # over all metrics
             for metric_name, metric_func in branch_metrics.items():
-                value = metric_func.compute().item()
-                result_dict[f"{branch_name}_{metric_name}"] = value
+                value = metric_func.compute()
+                
+                if self.average in ["macro", "micro", "weighted"]:
+                    result_dict[metric_name] = value.item() # return scalar
+                elif self.average in ["none"]:
+                    result_dict[f"{branch_name}_{metric_name}"] = value # return tensor
 
         return result_dict
 
@@ -158,6 +163,12 @@ def create_metrics(
                 metric_func = AUROC(
                     task="multiclass", num_classes=num_classes, average=average
                 )
+            elif metric_name == "cm":
+                from torchmetrics import ConfusionMatrix
+
+                metric_func = ConfusionMatrix(
+                    task="multiclass", num_classes=num_classes
+                )
             else:
                 raise NotImplementedError(
                     f"The metric {metric_name} has not been implemented"
@@ -225,4 +236,6 @@ def check_confusion_matrix_metric_name(metric_name: str):
         return "bm"
     if metric_name in ["markedness", "deltap", "mk"]:
         return "mk"
+    if metric_name in ["confusion_matrix", "cm"]:
+        return "cm"
     raise NotImplementedError("the metric is not implemented.")
