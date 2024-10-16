@@ -28,7 +28,7 @@ class LYClsMetrics:
         """
         self.metric_names = metric_names
         self.branch_dict = branch_dict
-        self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names, self.average)
+        self.metric_func_dict = create_metrics(self.branch_dict, self.metric_names, average)
         self.average = average
 
     def __call__(self, pred: Dict, label: Dict, device):
@@ -70,9 +70,9 @@ class LYClsMetrics:
                 value = metric_func.compute()
                 
                 if self.average in ["macro", "micro", "weighted"]:
-                    result_dict[metric_name] = value.item() # return scalar
+                    result_dict[f"{branch_name}_{metric_name}"] = value.item() # return scalar
                 elif self.average in ["none"]:
-                    result_dict[f"{branch_name}_{metric_name}"] = value # return tensor
+                    result_dict[f"{branch_name}_{metric_name}"] = value # return tensor (per class)
 
         return result_dict
 
