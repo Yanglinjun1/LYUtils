@@ -13,6 +13,12 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 10/17/2024
+
+- Added the assignments of collate_functions to the dataloader setup in **LYDataModuleBase**.
+- Added function **create_vanilla_state_dict** to convert lightning weights to regular model weights.
+- Modified **LYClsMetrics** to enable its use for testing purpose (added confusion matrix/"cm" and assign average as the attribute).
+
 ### 09/30/2024
 
 - Provided docstrings for most functions and classes.

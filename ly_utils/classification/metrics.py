@@ -71,7 +71,7 @@ class LYClsMetrics:
                 
                 if self.average in ["macro", "micro", "weighted"]:
                     result_dict[f"{branch_name}_{metric_name}"] = value.item() # return scalar
-                elif self.average in ["none"]:
+                elif self.average in ["none"] or metric_name == "cm":
                     result_dict[f"{branch_name}_{metric_name}"] = value # return tensor (per class)
 
         return result_dict

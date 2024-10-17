@@ -122,7 +122,8 @@ class LYDataModuleBase(L.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=True,
             drop_last=True,
-            num_workers=4,
+            num_workers=self.dl_workers,
+            collate_fn=self.collate_fn
         )
 
     def val_dataloader(self):
@@ -134,7 +135,9 @@ class LYDataModuleBase(L.LightningDataModule):
             dataset=self.val_ds,
             batch_size=self.val_batch_size,
             shuffle=False,
-            num_workers=4,
+            drop_last=False,
+            num_workers=self.dl_workers,
+            collate_fn=self.val_collate_fn
         )
 
     def test_dataloader(self):
@@ -144,5 +147,7 @@ class LYDataModuleBase(L.LightningDataModule):
             dataset=self.test_ds,
             batch_size=self.test_batch_size,
             shuffle=False,
-            num_workers=4,
+            drop_last=False,
+            num_workers=self.dl_workers,
+            collate_fn=self.test_collate_fn
         )
