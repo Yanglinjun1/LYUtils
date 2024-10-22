@@ -36,7 +36,7 @@ class LYLightningModuleBase(L.LightningModule):
         raise NotImplementedError
 
 
-def create_vanilla_state_dict(ckpt_path, key_name='state_dict'):
+def create_vanilla_state_dict(ckpt_path, key_name="state_dict"):
     """
     Create a vanilla state dictionary from a checkpoint file.
 
@@ -55,8 +55,8 @@ def create_vanilla_state_dict(ckpt_path, key_name='state_dict'):
     state_dict = OrderedDict()
     for key, value in model_weight.items():
         splitted_key = key.split(".")
-        
+
         new_key = ".".join(splitted_key[1:])  # get rid of the string part, e.g., "model"
         state_dict[new_key] = value
-        
+
     return state_dict

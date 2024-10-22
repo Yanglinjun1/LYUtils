@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 10/22/2024
+
+- Fixed the train/val/test_dataloader in base_dm: added assignment of the corresponding sampler and took care of the shuffle argument
+
 ### 10/17/2024
 
 - Added the assignments of collate_functions to the dataloader setup in **LYDataModuleBase**.
