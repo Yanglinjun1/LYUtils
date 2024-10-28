@@ -35,6 +35,23 @@ def create_LRScheduler(
         scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(
             optimizer, T_0=T_0, eta_min=eta_min
         )
+    elif scheduler_name == "TimmCosineRestartsDecay":
+        from timm.scheduler.cosine_lr import CosineLRScheduler
+        t_initial = scheduler_params.get("t_initial", 20)
+        cycle_decay = scheduler_params.get("cycle_decay", 0.85)
+        lr_min = scheduler_params.get("lr_min", 1e-5)
+        warmup_t = scheduler_params.get("warmup_t", 5)
+        warmup_lr_init = scheduler_params.get("warmup_lr_init", 1e-5)
+        cycle_limit = scheduler_params.get("cycle_limit", 401)
+        scheduler = CosineLRScheduler(
+                    optimizer, 
+                    t_initial=cycle_decay, 
+                    cycle_decay=cycle_decay, 
+                    lr_min=lr_min,
+                    warmup_t=warmup_t,
+                    warmup_lr_init=warmup_lr_init,
+                    cycle_limit=cycle_limit
+                )
     else:
         import warnings
 

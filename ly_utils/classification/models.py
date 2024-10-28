@@ -119,6 +119,7 @@ class MultiBranchEfficientNet(EfficientNet):
             label_index=label_index,
             branch_dict=branch_dict,
             num_classes=num_classes,
+            in_channels=in_channels,
             **override_params,
         )
         load_pretrained_weights(
