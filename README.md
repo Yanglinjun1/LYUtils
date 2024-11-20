@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 11/20/2024
+
+- Implemented **get_features** method for classification models to get the image embedding features of the input image data.
+
 ### 10/22/2024
 
 - Fixed the train/val/test_dataloader in base_dm: added assignment of the corresponding sampler and took care of the shuffle argument

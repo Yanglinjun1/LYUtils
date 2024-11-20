@@ -81,6 +81,12 @@ class MultiBranchEfficientNet(EfficientNet):
         else:
             return output
 
+    def get_features(self, inputs):
+        x = self.extract_features(inputs=inputs)
+        x = self._avg_pooling(x)
+
+        return x
+
     def set_output_branch(self, output_branch=None):
         self.output_branch = output_branch
 
@@ -191,6 +197,11 @@ class MultiBranchConvNext(nn.Module):
             return output[self.output_branch]
         else:
             return output
+
+    def get_features(self, inputs):
+        embeddings = self.model.forward_features(inputs)
+        poolings = self._pool(embeddings)
+        return poolings
 
     def _pool(self, x):
         if self.pooling == "avg":
