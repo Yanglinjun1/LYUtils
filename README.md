@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 03/26/2025
+
+- Added statistic tools: **summarize_average** (normality check, mean/median, std/iqr, 95%CI), **bland_altman_plot**.
+
 ### 11/20/2024
 
 - Implemented **get_features** method for classification models to get the image embedding features of the input image data.

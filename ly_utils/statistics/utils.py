@@ -5,10 +5,10 @@
 import numpy as np
 import pandas as pd
 import pingouin as pg
-from scipy.stats import chi2_contingency
-from typing import Union, List, Dict
+from scipy.stats import chi2_contingency, shapiro, norm, iqr
+from typing import Union, List, Tuple, Dict
 
-__all__ = ["summarize_iccs", "chi2_test"]
+__all__ = ["summarize_iccs", "summarize_average", "chi2_test", "bland_altman_plot"]
 
 ################################################################################
 # -F: summarize_iccs
@@ -118,6 +118,61 @@ def summarize_iccs(
         return result_dict
 
 
+def summarize_average(
+    data: np.ndarray, 
+    return_ci: bool = False
+) -> Dict[str, Union[float, Tuple[float, float], str]]:
+    """
+    Author: Linjun Yang. Ph.D.
+    
+    Summarizes a 1D NumPy array by checking its normality and calculating
+    mean & std or median & IQR accordingly. Optionally returns 95% CI.
+    
+    Parameters:
+        data (np.ndarray): 1D array of numerical data.
+        return_ci (bool): Whether to calculate 95% confidence interval.
+    
+    Returns:
+        dict: Summary containing either mean/std or median/IQR,
+              and optionally the confidence interval.
+    """
+    if data.ndim != 1:
+        raise ValueError("Input array must be 1D.")
+
+    # Normality test
+    stat, p_value = shapiro(data)
+    normal = p_value > 0.05
+
+    summary = {}
+
+    if normal:
+        mean = np.mean(data)
+        std = np.std(data, ddof=1)
+        summary["distribution"] = "normal"
+        summary["mean"] = mean
+        summary["std"] = std
+        if return_ci:
+            se = std / np.sqrt(len(data))
+            ci = norm.interval(0.95, loc=mean, scale=se)
+            summary["95% CI"] = ci
+    else:
+        median = np.median(data)
+        iqr_val = iqr(data)
+        summary["distribution"] = "non-normal"
+        summary["median"] = median
+        summary["IQR"] = iqr_val
+        if return_ci:
+            # Bootstrapped CI for the median
+            boot_medians = np.array([
+                np.median(np.random.choice(data, size=len(data), replace=True))
+                for _ in range(1000)
+            ])
+            ci = np.percentile(boot_medians, [2.5, 97.5])
+            summary["95% CI"] = tuple(ci)
+
+    return summary
+
+
 def chi2_test(
     df: pd.DataFrame, group_col: str, class_col: str, print_results: bool = False
 ):
@@ -163,3 +218,31 @@ def chi2_test(
         print(expected)
 
     return chi2, p, dof, expected
+
+
+def bland_altman_plot(data1, data2, title, *args, **kwargs):
+    """
+    Author: Kellen Mulford Ph.D.
+
+    Args:
+        data1: data1
+        data2: data2
+        title: title of the figure
+
+    Returns:
+        matplotlib.figure.Figure: whole figure of bland altman plot
+    """
+    data1     = np.asarray(data1)
+    data2     = np.asarray(data2)
+    mean      = np.mean([data1, data2], axis=0)
+    diff      = data1 - data2                   # Difference between data1 and data2
+    md        = np.mean(diff)                   # Mean of the difference
+    sd        = np.std(diff, axis=0)            # Standard deviation of the difference
+    fig = plt.figure()
+    plt.scatter(mean, diff, *args, **kwargs)
+    plt.axhline(md,           color='gray', linestyle='--')
+    plt.axhline(md + 1.96*sd, color='gray', linestyle='--')
+    plt.axhline(md - 1.96*sd, color='gray', linestyle='--')
+    plt.title(title)
+    
+    return fig
