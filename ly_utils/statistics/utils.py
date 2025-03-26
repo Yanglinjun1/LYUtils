@@ -4,6 +4,7 @@
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import pingouin as pg
 from scipy.stats import chi2_contingency, shapiro, norm, iqr
 from typing import Union, List, Tuple, Dict
