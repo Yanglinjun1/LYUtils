@@ -36,7 +36,7 @@ class LYSegMetrics:
         """
 
         self.multi_label = multi_label
-        self.label_index = label_index
+        self.label_index = label_index.copy()
 
         metric_dict = dict()
         for metric in metrics:
@@ -46,11 +46,13 @@ class LYSegMetrics:
                 )
             if metric == "dice":
                 metric_dict[metric] = DiceMetric(
-                    include_background=True, reduction="mean_batch"
+                    include_background=True if multi_label else False, reduction="mean_batch",
+                    num_classes=None if multi_label else len(label_index) + 1,
                 )
             elif metric == "hausdorff":
                 metric_dict[metric] = HausdorffDistanceMetric(
-                    include_background=True, reduction="mean_batch"
+                    include_background=True if multi_label else False, reduction="mean_batch",
+                    num_classes=None if multi_label else len(label_index) + 1,
                 )
         self.metrics = metrics
         self.metric_dict = metric_dict
@@ -90,10 +92,7 @@ class LYSegMetrics:
             # for each label
             result_tensor = metric_obj.aggregate()
             for label, ind in self.label_index.items():
-                if (
-                    self.multi_label
-                ):  # if multi_label, start from 1-1=0; else (multi-class) start with 1
-                    ind -= 1
+                ind -= 1 # multi-label starts from 0th channel; multi-class starts from 1st label which is 0-index as include_background=False
                 result[label] = result_tensor[ind].item()
 
             # mean metric across labels

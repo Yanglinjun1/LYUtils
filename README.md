@@ -13,6 +13,10 @@ Developer: Linjun Yang, Ph.D. [wadeyang2@gmail.com]
 
 The following is a log of the changes made to the repository.
 
+### 07/13/2025
+
+- Modified **LySegMetrics** to really evalute segmentation accuracy for multi-class situation.
+
 ### 03/26/2025
 
 - Added statistic tools: **summarize_average** (normality check, mean/median, std/iqr, 95%CI), **bland_altman_plot**.
